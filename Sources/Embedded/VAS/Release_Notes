@@ -1,0 +1,5 @@
+This code contains the changes including
+
+1. Device Reconnecting with the server is happening.
+2. Device configuration command is updated to modify the Acquisition duration and Acquisition interval.
+3. Stop command is updated to stop the acquisition.

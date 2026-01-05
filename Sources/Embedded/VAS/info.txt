@@ -1,0 +1,7 @@
+This file contains the spi_pin control mode check code which contains
+
+1. using the spid_configure_cs function we cant able to select the particular chip select for programming, this will work for the default chip select 0 only...so we used spi_select_cs for selecting the chip select.
+2. in ad713x spi reg read function, writehw function, the address arguments are not passed correctly, while typecasting. 
+
+
+

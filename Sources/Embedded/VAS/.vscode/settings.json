@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "extract_config.h": "c"
+    },
+    "cmake.sourceDirectory": "/home/mohan/Projects/VAS/Mohan/irdm_v1.0/lib/lwip"
+}

@@ -1,0 +1,187 @@
+# Copyright (C) 2006 Microchip Technology Inc. and its subsidiaries
+#
+# SPDX-License-Identifier: MIT
+
+menu "Flash Memory"
+	depends on LOAD_SW
+
+config FAST_BOOT
+	bool "Enable Fast Boot"
+	depends on SAMA5D2 || SAMA7G5 || SAMA7D65
+	default n
+	help
+	  Enables "Fast Boot". Starting with sama5d2, sama7g5 and sama7d65, the
+	  purpose is to restore a Linux context from a cold boot (power-up).
+	  Resuming from that state requires support in the AT91Bootstrap.
+
+choice
+	prompt "Non-volatile memory to load from"
+	default DATAFLASH
+	help
+	  Select memory for at91bootstrap
+
+config	DATAFLASH
+	bool "Dataflash"
+
+config	FLASH
+	depends on !FAST_BOOT
+	bool "Parallel NOR flash(supported from ROM Code v2.1)"
+	help
+	  Before you select it, please check the ROM Code if it supports
+	  to boot from the NOR flash.  Beacause booting from the external
+	  NOR memory is supported in ROM Code v2.1 for SAMA5D3x.
+
+config	NANDFLASH
+	bool "NAND flash"
+
+config	SDCARD
+	bool "SD card"
+
+endchoice
+
+config MEMORY
+	string
+	default "dataflash"	if DATAFLASH
+	default "flash"		if FLASH
+	default "nandflash"	if NANDFLASH
+	default "sdcard"	if SDCARD
+
+menu  "SD Card Configuration"
+	depends on SDCARD
+
+config AT91_MCI
+	bool
+	depends on CPU_HAS_HSMCI0 || CPU_HAS_HSMCI1 || CPU_HAS_HSMCI2 || CPU_HAS_MCI0 || CPU_HAS_MCI1
+	default y
+
+choice
+	prompt "MultiMedia Card Interface Select"
+	depends on AT91_MCI
+	default AT91_MCI0
+	help
+	  This interface allow you select which MultiMedia Card Interface is used for the SD Card.
+
+config AT91_MCI0
+	bool "On Atmel MCI 0"
+	depends on CPU_HAS_HSMCI0 || CPU_HAS_MCI0
+
+config AT91_MCI1
+	bool "On Atmel MCI 1"
+	depends on CPU_HAS_HSMCI1 || CPU_HAS_MCI1
+
+config AT91_MCI2
+	bool "On Atmel MCI 2"
+	depends on CPU_HAS_HSMCI2
+
+endchoice
+
+config SDHC
+	bool
+	depends on CPU_HAS_SDHC0 || CPU_HAS_SDHC1 || CPU_HAS_SDHC2
+	default y
+
+choice
+	prompt "SD Host Controller Select"
+	depends on SDHC
+	default SDHC0
+	help
+	  This interface allow you select which SD Host Controller for the SD Card.
+
+config SDHC0
+	bool "On SDHC0"
+	depends on CPU_HAS_SDHC0
+
+config SDHC1
+	bool "On SDHC1"
+	depends on CPU_HAS_SDHC1
+
+config SDHC2
+	bool "On SDHC2"
+	depends on CPU_HAS_SDHC2
+
+endchoice
+
+config SDHC_NODMA
+	bool "Disable DMA mode"
+	depends on SDHC
+	default n
+	help
+	  Disable SDHC DMA mode, use PIO mode only
+
+config SDHC_18V
+	bool "Support 1.8V signaling"
+	depends on SDHC
+	default n
+	select SD_UHS
+	help
+	  Select if board supports 1.8V signaling
+
+config SDHC_UHS
+	bool "Support ultra high speed of SDCard/e.MMC"
+	depends on SDHC_18V
+	default y if SDHC_18V
+	help
+	  SDCard: UHS-I SDR12/SDR25/SDR50/SDR104/DDR50
+	  e.MMC : HS200 HS400
+
+choice
+    prompt "Max SDHC clock speed"
+	depends on SDHC_UHS
+    default SDHC_CLK_200MHZ
+
+config  SDHC_CLK_100MHZ
+    bool "100 MHz"
+
+config  SDHC_CLK_200MHZ
+    bool "200 MHz"
+
+endchoice
+
+config SDHC_SD_DDR200
+	bool "Support SD Card UHS-I DDR200"
+	depends on SDHC_UHS
+	default n
+
+config SDHC_8BIT_SUPPORT
+	bool "Use the full 8 bit bus width for this SDHC"
+	depends on SAMA5D2
+	depends on SDHC0
+	default y
+	help
+	  This SDHC block supports 8 bit bus width. However, if this block
+	  is connected to an SD-Card, the SD-Card can only make use of 4 bits,
+	  thus the other 4 bits can be reused for something else.
+	  In such case, deselect this option such that AT91Bootstrap
+	  will not configure SDHC lines 4-7 in SDHC mode, and they can be
+	  used for another interface.
+
+config MMC_NONREMOVABLE
+	bool "Device attached to the MMC bus is not removable"
+	depends on SDHC
+	default n
+	help
+		the device is non removable, and the card detection procedure
+		using the SDMCC_CD signal is bypassed.
+
+config FATFS
+	bool
+	depends on SDCARD
+	default y if SDCARD
+
+endmenu
+
+if DATAFLASH
+	source "driver/Config.in.dataflash"
+endif
+
+if NANDFLASH
+	source "driver/Config.in.nandflash"
+endif
+
+endmenu
+
+config BOOTSTRAP_MAXSIZE
+	string
+	default "65536"	if SAMA5D3X || SAMA5D4 || SAMA5D2 || SAMA7G5 || SAMA7D65
+	default "32768" if SAM9X60 || SAM9X7
+	default "23000"
